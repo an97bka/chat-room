@@ -12,57 +12,57 @@ public class ClientConnect extends Thread {
 	private DataOutputStream dos;
 	private DataInputStream dis;
 	private boolean run;
-	
-	public ClientConnect(Server server, Socket client){
+
+	public ClientConnect(Server server, Socket client) {
 		try {
-			this.server=server;
-			this.client=client;
-			dos= new DataOutputStream(client.getOutputStream());
-			dis= new DataInputStream(client.getInputStream());
-			run=true;
+			this.server = server;
+			this.client = client;
+			dos = new DataOutputStream(client.getOutputStream());
+			dis = new DataInputStream(client.getInputStream());
+			run = true;
 			this.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	public void run(){
-		// xữ lý đăng nhập
-		String msg=null;
-		while(run){
-			nickName=getMSG();
-			if(nickName.compareTo("0")==0){
+
+	public void run() {
+		// xử lí đăng nhập
+		String msg = null;
+		while (run) {
+			nickName = getMSG();
+			if (nickName.compareTo("0") == 0) {
 				logout();
-			}
-			else {
-				if(checkNick(nickName)){
+			} else {
+				if (checkNick(nickName)) {
 					sendMSG("0");
-				}
-				else{
-					server.user.append(nickName+" đã kết nối với room\n");
-					server.sendAll(nickName,nickName+" đã vào room với anh em\n");
+				} else {
+					server.user.append(nickName + " đã kết " + "nối với room\n");
+					server.sendAll(nickName, nickName + " đã vào room với anh em\n");
 					server.listUser.put(nickName, this);
 					server.sendAllUpdate(nickName);
 					sendMSG("1");
 					diplayAllUser();
-					while(run){
+					while (run) {
 						int stt = Integer.parseInt(getMSG());
-						switch(stt){
-							case 0:
-								run=false;
-								server.listUser.remove(this.nickName);
-								exit();
-								break;
-							case 1:
-								msg = getMSG();
-								server.sendAll(nickName,nickName+" : "+msg);
-								break;
+						switch (stt) {
+						case 0:
+							run = false;
+							server.listUser.remove(this.nickName);
+							exit();
+							break;
+						case 1:
+							msg = getMSG();
+							server.sendAll(nickName, nickName + " : " + msg);
+							break;
 						}
 					}
 				}
 			}
 		}
 	}
+
 	private void logout() {
 		try {
 			dos.close();
@@ -70,46 +70,52 @@ public class ClientConnect extends Thread {
 			client.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}		
+		}
 	}
-	private void exit(){
+
+	private void exit() {
 		try {
 			server.sendAllUpdate(nickName);
 			dos.close();
 			dis.close();
 			client.close();
-			server.user.append(nickName+" đã thoát\n");
-			server.sendAll(nickName,nickName+" đã thoát\n");
+			server.user.append(nickName + " đã thoát\n");
+			server.sendAll(nickName, nickName + " đã thoát\n");
 		} catch (IOException e) {
 			e.printStackTrace();
-		}	
+		}
 	}
-	private boolean checkNick(String nick){
-		return server.listUser.containsKey(nick);	
+
+	private boolean checkNick(String nick) {
+		return server.listUser.containsKey(nick);
 	}
-	private void sendMSG(String data){
+
+	private void sendMSG(String data) {
 		try {
 			dos.writeUTF(data);
 			dos.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	public void sendMSG(String msg1,String msg2){
+
+	public void sendMSG(String msg1, String msg2) {
 		sendMSG(msg1);
 		sendMSG(msg2);
 	}
-	private String getMSG(){
-		String data=null;
+
+	private String getMSG() {
+		String data = null;
 		try {
-			data=dis.readUTF();
+			data = dis.readUTF();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return data;
 	}
-	private void diplayAllUser(){
+
+	private void diplayAllUser() {
 		String name = server.getAllName();
 		sendMSG("4");
 		sendMSG(name);
